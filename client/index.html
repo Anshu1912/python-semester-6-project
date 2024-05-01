@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Upload and Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('agri.jpg');
+            background-size: cover;
+            background-position: center;
+            backdrop-filter: blur(5px);
+            /* Add blur effect */
+        }
+
+        #container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            /* Increase opacity */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            /* Add box shadow */
+        }
+
+        #uploadBtn {
+            font-size: 24px;
+            padding: 20px 40px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #imageContainer img {
+            max-width: 100%;
+            max-height: 400px;
+            margin-top: 20px;
+        }
+
+        .loading-bar {
+            width: 200px;
+            /* Adjust the width as needed */
+            height: 10px;
+            background-color: #f3f3f3;
+            /* Background color of the bar */
+            border-radius: 5px;
+            /* Rounded corners */
+            overflow: hidden;
+            /* To hide the animation overflow */
+            margin: 20px auto;
+            color: "white";
+            /* Center it horizontally */
+        }
+
+        .loading-bar::before {
+            content: "";
+            display: block;
+            width: 0%;
+            height: 100%;
+            background-color: #3498db;
+            /* Color of the loading animation */
+            animation: loading 2s linear infinite;
+            /* Apply the 'loading' animation */
+        }
+
+        @keyframes loading {
+            0% {
+                width: 0%;
+            }
+
+            50% {
+                width: 100%;
+            }
+
+            100% {
+                width: 0%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <button id="uploadBtn">Upload Image</button>
+        <div id="imageContainer"></div>
+        <div id="loadingContainer" style="display: none">
+            <div class="loading-bar"></div>
+            <p>Processing...</p>
+        </div>
+        <div id="predictionContainer"></div>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none" />
+
+    <script>
+        const uploadBtn = document.getElementById("uploadBtn");
+        const imageContainer = document.getElementById("imageContainer");
+        const loadingContainer = document.getElementById("loadingContainer");
+        const predictionContainer = document.getElementById(
+            "predictionContainer"
+        );
+        const fileInput = document.getElementById("fileInput");
+
+        uploadBtn.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", async () => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = document.createElement("img");
+                    img.src = reader.result;
+                    imageContainer.innerHTML = "";
+                    imageContainer.appendChild(img);
+
+                    loadingContainer.style.display = "block";
+                    predictionContainer.innerHTML = "";
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    fetch("http://localhost:8000/predict", {
+                        method: "POST",
+                        body: formData,
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            loadingContainer.style.display = "none";
+                            const classEl = document.createElement("p");
+                            classEl.textContent = `Class: ${data.class}`;
+                            const confidenceEl = document.createElement("p");
+                            confidenceEl.textContent = `Confidence: ${data.confidence}`;
+                            predictionContainer.appendChild(classEl);
+                            predictionContainer.appendChild(confidenceEl);
+                        })
+                        .catch((error) => {
+                            console.error("Error:", error);
+                        });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+
+</html>
