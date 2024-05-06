@@ -30,3 +30,6 @@ python3 main.py
 
 Use the `index.html` inside the `client` folder to run the web client for making inference calls.
 
+## References
+
+Attached Research Paper has been used for references.
